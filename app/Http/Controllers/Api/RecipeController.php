@@ -21,7 +21,7 @@ class RecipeController extends Controller
         return RecipeResource::collection( $recipes );
     }
 
-    public function store(StoreRecipeRequest $request) {
+    public function store(Request $request) {
 
         /* $request->validate([
             'category_id' => 'required',
@@ -34,11 +34,9 @@ class RecipeController extends Controller
         ]); */
 
 
-        $recipe = Recipe::create($request->all());
-        $tags = json_decode($request->tags);
-
-        $recipe->tags()->attach($tags); // Sobrescribe todo
-
+        // $recipe = Recipe::create($request->all());
+        $recipe = $request->user()->recipes()->create($request->all());
+        $recipe->tags()->attach(json_decode($request->tags));
 
         return response()->json(new RecipeResource($recipe), Response::HTTP_CREATED); // 201
     }

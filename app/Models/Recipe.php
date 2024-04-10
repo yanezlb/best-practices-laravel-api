@@ -11,7 +11,6 @@ class Recipe extends Model
 
     protected $fillable = [
         'category_id',
-        'user_id',
         'title',
         'description',
         'ingredients',
@@ -30,4 +29,5 @@ class Recipe extends Model
     public function tags(){
         return $this->belongsToMany(Tag::class);
     }
+
 }
