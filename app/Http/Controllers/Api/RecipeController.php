@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRecipeRequest;
 use App\Http\Requests\UpdateRecipeRequest;
 use App\Http\Resources\RecipeResource;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Models\Recipe;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,6 +14,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RecipeController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index()
     {
         // all, get
@@ -21,22 +24,23 @@ class RecipeController extends Controller
         return RecipeResource::collection( $recipes );
     }
 
-    public function store(Request $request) {
+    public function store(StoreRecipeRequest $request) {
 
         /* $request->validate([
             'category_id' => 'required',
-            'user_id' => 'required',
             'title' => 'required',
             'description' => 'required',
             'ingredients' => 'required',
             'instructions' => 'required',
-            'image' => 'required',
+            'image' => 'required|mimes:png',
         ]); */
-
 
         // $recipe = Recipe::create($request->all());
         $recipe = $request->user()->recipes()->create($request->all());
         $recipe->tags()->attach(json_decode($request->tags));
+
+        $recipe->image = $request->file('image')->store('recipes', 'public');
+        $recipe->save();
 
         return response()->json(new RecipeResource($recipe), Response::HTTP_CREATED); // 201
     }
@@ -49,6 +53,9 @@ class RecipeController extends Controller
     }
 
     public function update(UpdateRecipeRequest $request, Recipe $recipe) {
+
+        $this->authorize('update', $recipe);
+
         $recipe->update($request->all());
 
         if($tags = json_decode($recipe->tags)){
@@ -57,10 +64,21 @@ class RecipeController extends Controller
             $recipe->tags()->sync($tags); // Agrega a lo que ya existe
         }
 
+        if ($request->file('image')) {
+            $recipe->image = $request->file('image')->store('recipes', 'public');
+            $recipe->save();
+        }
+
         return response()->json(new RecipeResource($recipe), Response::HTTP_OK); // 200
     }
 
-    public function destroy(Recipe $recipe) {
+    public function destroy(Request $request, Recipe $recipe) {
+
+        $this->authorize('delete', $recipe);
+        //echo $user->id;
+        /* echo $recipe->user_id;
+        die; */
+
         $recipe->delete();
 
         return response()->json(null, Response::HTTP_NO_CONTENT); // 204
