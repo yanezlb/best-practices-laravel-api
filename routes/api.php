@@ -22,10 +22,10 @@ Route::delete('recipes/{recipe}', [RecipeController::class, 'destroy']); // elim
 
 Route::post('login', [LoginController::class, 'store']);
 
-Route::middleware('auth:sanctum')->group(function (){
-    Route::get('categories',            [CategoryController::class, 'index']);
-    Route::get('categories/{category}', [CategoryController::class, 'show']);
-    Route::apiResource('recipes', RecipeController::class); // Todos los recursos
-    Route::get('tags',            [TagController::class, 'index']);
-    Route::get('tags/{tag}',        [TagController::class, 'show']);
+Route::middleware('auth:sanctum')->group(function () {
+
+    require __DIR__.'/api_v1.php';
+
+    require __DIR__.'/api_v2.php';
+
 });
